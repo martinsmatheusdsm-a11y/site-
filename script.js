@@ -369,7 +369,21 @@ meuAudio.addEventListener('timeupdate', () => {
   barra.style.width = (meuAudio.currentTime / meuAudio.duration * 100) + '%';
   msgTempo.textContent = formatarTempo(meuAudio.duration - meuAudio.currentTime);
 });
-meuAudio.addEventListener('ended', () => { if (surpresaDisparada && !meuAudio.muted) terminarSurpresa(); });
+meuAudio.addEventListener('ended', () => { if (surpresaDisparada && !meuAudio.muted) mostrarContinuar(); });
+
+/* Quando a mensagem acaba, aparece "continuar". O toque nele abre o final e
+   começa Palácios e Castelos na hora (o iPhone só troca de música com um toque).
+   Se ninguém tocar em 25 s, o final abre sozinho do mesmo jeito. */
+const btnContinuar = $('#btn-continuar');
+let continuarTimer = null;
+function mostrarContinuar() {
+  if (surpresaTerminada) return;
+  barra.style.width = '100%';
+  overlay.classList.add('terminou');
+  btnContinuar.hidden = false;
+  continuarTimer = setTimeout(terminarSurpresa, 25000);
+}
+btnContinuar.addEventListener('click', terminarSurpresa);
 
 /* =========================================================================
    ENTRADA
@@ -497,6 +511,7 @@ btnPular.addEventListener('click', terminarSurpresa);
 function terminarSurpresa() {
   if (surpresaTerminada) return;
   surpresaTerminada = true;
+  clearTimeout(continuarTimer);
   modo = 'final';
 
   meuAudio.pause();

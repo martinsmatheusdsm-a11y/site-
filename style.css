@@ -375,6 +375,19 @@ body.travado { position: fixed; left: 0; right: 0; overflow: hidden; }
 .progresso-barra { height: 100%; width: 0; background: var(--acento); transition: width .25s linear; }
 .msg-tempo { flex: none; font-family: var(--ui); font-size: .78rem; font-variant-numeric: tabular-nums; color: var(--tinta-suave); }
 
+/* botão "continuar" (aparece quando a mensagem termina) */
+.btn-continuar {
+  padding: 14px 40px;
+  font-family: var(--ui); font-size: .8rem; letter-spacing: .2em; text-transform: uppercase;
+  color: #fff;
+  background: var(--tinta);
+  border: none; border-radius: 999px;
+  cursor: pointer;
+  animation: surgir 1s var(--curva) both, chama 1.8s ease-in-out 1s infinite;
+  -webkit-tap-highlight-color: transparent;
+}
+.overlay-surpresa.terminou .mensagem { display: none; }
+
 .btn-pular {
   position: absolute;
   top: max(16px, env(safe-area-inset-top));
