@@ -19,18 +19,11 @@ const CONFIG = {
   // Quando uma acaba, toca a próxima da lista; depois da última, volta para a primeira.
   ordemMusicas: ['andanca', 'palacios', 'naoPenso'],
 
-  /* ONDE FICA O SEU ÁUDIO
-     'inicio' = logo depois da capa (antes das fotos)
-     'fim'    = depois do "mas calma... tenho mais uma surpresa..."
-     Dá para testar a outra opção sem mexer aqui, só mudando o link:
-     .../?audio=fim  ou  .../?audio=inicio */
-  posicaoAudio: 'inicio',
-
   // sua mensagem gravada (tenta o 1º arquivo; se não existir, o próximo)
   meuAudio: ['assets/audio/meu-audio.mp3', 'assets/audio/meu-audio.ogg'],
 
   // início do namoro, para o contador do final (horário de Brasília)
-  inicioNamoro: '2026-01-01T00:00:00-03:00',
+  inicioNamoro: '2026-03-01T00:00:00-03:00',
 
   volumeMusica: 60,      // volume das músicas (0 a 100)
   duracaoFade: 1500,     // duração das entradas/saídas de volume, em ms
@@ -56,12 +49,6 @@ const FOTOS_EXTRAS = [
    ========================================================================= */
 
 const $ = (sel) => document.querySelector(sel);
-
-// posição do áudio: o link (?audio=fim / ?audio=inicio) tem prioridade sobre o CONFIG
-const POSICAO_AUDIO = (() => {
-  const p = new URLSearchParams(location.search).get('audio');
-  return p === 'fim' || p === 'inicio' ? p : CONFIG.posicaoAudio;
-})();
 
 const entradaEl   = $('#entrada');
 const btnEntrar   = $('#btn-entrar');
@@ -365,8 +352,8 @@ function carregarMeuAudio(i = 0) {
   meuAudio.load();
 }
 
-/* Com o áudio no fim, ele é "destravado" em silêncio no clique de "entrar",
-   para o iPhone deixar ele tocar sozinho depois. */
+/* No toque em "entrar" o áudio é "destravado" em silêncio, para o iPhone
+   deixar ele tocar sozinho depois, quando ela rolar até a página dele. */
 function destravarMeuAudio() {
   meuAudio.muted = true;
   const p = meuAudio.play();
@@ -405,7 +392,7 @@ function abrirMensagem() {
     return;
   }
   meuAudio.currentTime = 0;
-  tocarMensagem();                      // no modo "inicio" isto roda dentro do toque em "entrar"
+  tocarMensagem();
   if (M.querTocando || estaTocando()) silenciarMusica();
 }
 
@@ -429,13 +416,11 @@ function continuar() {
   liberarScroll();
   player.classList.add('mostrar');
 
-  // áudio no início: agora começa Andança. Áudio no fim: Palácios e Castelos.
+  // o toque em "continuar" começa Andança e leva para "segue algumas fotos..."
   somAtivo = true;
   falhasSeguidas = 0;
-  tocarMusica(POSICAO_AUDIO === 'inicio' ? CONFIG.ordemMusicas[0] : (CONFIG.ordemMusicas[1] || CONFIG.ordemMusicas[0]));
-
-  const proximo = POSICAO_AUDIO === 'inicio' ? $('#narrativa') : $('#fotos-extras');
-  setTimeout(() => window.scrollTo({ top: proximo.offsetTop, behavior: menosMovimento ? 'auto' : 'smooth' }), 250);
+  tocarMusica(CONFIG.ordemMusicas[0]);
+  setTimeout(() => window.scrollTo({ top: $('#narrativa').offsetTop, behavior: menosMovimento ? 'auto' : 'smooth' }), 250);
 }
 btnContinuar.addEventListener('click', continuar);
 btnPular.addEventListener('click', continuar);
@@ -498,14 +483,9 @@ function entrar() {
   iniciarBrilhos();
   iniciarAssinatura();
 
-  // Este toque é o gesto que libera o som no celular.
-  if (POSICAO_AUDIO === 'inicio') {
-    abrirMensagem();                        // seu áudio começa já
-  } else {
-    tocarMusica(CONFIG.ordemMusicas[0]);    // Andança começa junto com o texto
-    destravarMeuAudio();
-    setTimeout(() => player.classList.add('mostrar'), 500);
-  }
+  // Este toque é o gesto que libera o som no celular: o áudio fica pronto
+  // para começar sozinho quando ela rolar da abertura até a página dele.
+  destravarMeuAudio();
 
   entradaEl.classList.add('saindo');
   setTimeout(() => {
@@ -518,7 +498,7 @@ function entrar() {
    ROLAGEM: revelação suave (cada coisa aparece uma vez só)
    ========================================================================= */
 function iniciarObservadores() {
-  document.querySelectorAll('.texto-intro, .cena .midia, .cena .texto, .carta, .chamada-surpresa, .foto-extra')
+  document.querySelectorAll('.texto-intro, .cena .midia, .cena .texto, .carta, .foto-extra')
     .forEach((el) => el.classList.add('revelar'));
 
   // Observa os blocos (e não a foto da cena em si: ela começa "recortada" e o
@@ -533,15 +513,13 @@ function iniciarObservadores() {
       obs.unobserve(el);
     });
   }, { threshold: 0.15, rootMargin: '0px 0px -8% 0px' });
-  document.querySelectorAll('.texto-intro, .cena, .carta, .chamada-surpresa, .foto-extra').forEach((el) => obs.observe(el));
+  document.querySelectorAll('.texto-intro, .cena, .carta, .foto-extra').forEach((el) => obs.observe(el));
 
-  // com o áudio no fim, a página dele dispara quando metade dela aparece — uma vez só
-  if (POSICAO_AUDIO === 'fim') {
-    const obsMsg = new IntersectionObserver((entradas, o) => {
-      if (!mensagemFeita && modo === 'livre' && entradas.some((e) => e.isIntersecting)) { o.disconnect(); abrirMensagem(); }
-    }, { threshold: 0.5 });
-    obsMsg.observe(secMensagem);
-  }
+  // seu áudio começa sozinho quando metade da página dele aparece — uma vez só
+  const obsMsg = new IntersectionObserver((entradas, o) => {
+    if (!mensagemFeita && modo === 'livre' && entradas.some((e) => e.isIntersecting)) { o.disconnect(); abrirMensagem(); }
+  }, { threshold: 0.5 });
+  obsMsg.observe(secMensagem);
 
   prepararMidias();
 }
@@ -585,14 +563,6 @@ function montarFotosExtras() {
     fig.appendChild(img);
     sec.appendChild(fig);
   });
-}
-
-/* coloca a página do áudio no lugar escolhido */
-function posicionarMensagem() {
-  if (POSICAO_AUDIO === 'inicio') {
-    const narrativa = $('#narrativa');
-    narrativa.parentNode.insertBefore(secMensagem, narrativa);
-  }
 }
 
 /* =========================================================================
@@ -765,7 +735,6 @@ function iniciarAssinatura() {
    início
    ========================================================================= */
 window.scrollTo(0, 0);
-posicionarMensagem();
 montarFotosExtras();
 montarLista();
 iniciarContador();

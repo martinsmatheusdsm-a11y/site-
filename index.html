@@ -41,6 +41,38 @@
        ===================================================================== -->
   <main id="conteudo" class="conteudo" hidden>
 
+    <!-- 2. ABERTURA -->
+    <section class="intro abertura">
+      <p class="texto-intro">
+        amor, queria te dar esse presente que não possui valor material,
+        mas ele expressa como foi meu ano, e como você foi especial pra mim.
+      </p>
+      <div class="seta" aria-hidden="true"></div>
+    </section>
+
+    <!-- ---------------------------------------------------------------
+         3. SUA MENSAGEM (áudio). Começa sozinho quando ela rola até aqui.
+         Enquanto o áudio toca, a tela fica parada; no fim aparece "continuar",
+         que começa Andança e leva para as fotos.
+         --------------------------------------------------------------- -->
+    <section id="mensagem" class="mensagem-pagina">
+      <button id="btn-pular" class="btn-pular" type="button">pular</button>
+      <div class="ondas">
+        <span></span><span></span><span></span>
+        <button id="msg-btn" class="msg-btn" type="button" aria-label="ouvir mensagem">
+          <svg class="ic-pause" viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor"/></svg>
+          <svg class="ic-play" viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z" fill="currentColor"/></svg>
+        </button>
+      </div>
+      <div class="msg-barra">
+        <div class="progresso"><div id="progresso-barra" class="progresso-barra"></div></div>
+        <span id="msg-tempo" class="msg-tempo">0:00</span>
+      </div>
+      <p id="msg-dica" class="msg-dica" hidden>toque no ▶ para ouvir</p>
+      <!-- o toque em "continuar" também é o que libera a próxima música no iPhone -->
+      <button id="btn-continuar" class="btn-continuar" type="button" hidden>continuar</button>
+    </section>
+
     <!-- A NARRATIVA (introdução + fotos). O fio dourado é desenhado aqui
          dentro pelo script.js, ligando as fotos enquanto ela rola a tela. -->
     <div id="narrativa" class="narrativa">
@@ -50,11 +82,9 @@
         <circle class="fio-ponta" r="3.5"></circle>
       </svg>
 
-    <!-- 2. INTRODUÇÃO -->
+    <!-- 4. INTRODUÇÃO DAS FOTOS (aparece depois do áudio) -->
     <section class="intro">
       <p class="texto-intro">
-        amor, queria te dar esse presente que não possui valor material,
-        mas ele expressa como foi meu ano, e como você foi especial pra mim.
         segue algumas fotos com momentos nossos desse ano maravilhoso( um dos melhores da minha existência até o momento):
       </p>
       <div class="seta" aria-hidden="true"></div>
@@ -151,37 +181,13 @@
         <p class="carta-abertura">meu amor,</p>
         <p>queria te agradecer por tudo que você fez esse ano comigo, por me aguentar sempre quando eu to chato ou estranho.</p>
         <p>você é minha maior conquista da vida, tenho certeza que se todos tivessem uma Julia seriam muito mais felizes e iriam ser pessoas melhores.</p>
-        <p>obrigado por você sempre me apoiar e incentivar e que possamos passar mais um resto da vida juntos, eu sou extremamente apaixonado e imagino todos os cenários da vida com você. de uma saída simples pra comer ao nascimento dos nossos filhos.</p>
+        <p>obrigado por você sempre me apoiar e incentivar e que possamos passar mais um resto da vida juntos, eu sou extremamente apaixonado e imagino todos os cenários da vida com você. de uma saída simples pra comer a ver o nascimento dos nossos filhos.</p>
         <p>eu temho uma certeza na vida, o que depender de mim pra te fazer feliz, eu irei fazer, quero te agradar e te exaltar quando você não estiver comigo.</p>
-        <p>eu tenho orgulho de cada conquista e espaço que você vai ganhando nesse mundo tão perigoso. te amo muito, amo te amar, amo ser seu namorado, amo cada detalhe seu, amo ver você dormindo .</p>
+        <p>eu tenho orgulho de cada conquista e espaço que você vai ganhando nesse mundo tão perigoso. te amo muito, amo te amar, amo ser seu namorado, amo cada detalhe seu, amo ver você dormindo...</p>
         <p class="carta-fecho">você pra sempre sera meu boxexãoooo</p>
       </div>
 
-      <p class="chamada-surpresa">mas calma, não acabou por ai... tenho mais uma surpresa...</p>
       <div class="seta" aria-hidden="true"></div>
-    </section>
-
-    <!-- ---------------------------------------------------------------
-         SUA MENSAGEM (áudio). O script.js coloca esta página logo depois da
-         capa (padrão) ou aqui, depois do "mas calma..." (link com ?audio=fim).
-         Enquanto o áudio toca, a tela fica parada; no fim aparece "continuar".
-         --------------------------------------------------------------- -->
-    <section id="mensagem" class="mensagem-pagina">
-      <button id="btn-pular" class="btn-pular" type="button">pular</button>
-      <div class="ondas">
-        <span></span><span></span><span></span>
-        <button id="msg-btn" class="msg-btn" type="button" aria-label="ouvir mensagem">
-          <svg class="ic-pause" viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor"/></svg>
-          <svg class="ic-play" viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z" fill="currentColor"/></svg>
-        </button>
-      </div>
-      <div class="msg-barra">
-        <div class="progresso"><div id="progresso-barra" class="progresso-barra"></div></div>
-        <span id="msg-tempo" class="msg-tempo">0:00</span>
-      </div>
-      <p id="msg-dica" class="msg-dica" hidden>toque no ▶ para ouvir</p>
-      <!-- o toque em "continuar" também é o que libera a próxima música no iPhone -->
-      <button id="btn-continuar" class="btn-continuar" type="button" hidden>continuar</button>
     </section>
 
     <!-- FOTOS SEM LEGENDA: uma por página, no formato original de cada foto.
@@ -197,7 +203,7 @@
 
         <!-- contador ao vivo: a data de início fica em CONFIG.inicioNamoro (script.js) -->
         <div class="contador" aria-live="off">
-          <span class="contador-rotulo">juntos desde 01 · 01 · 2026</span>
+          <span class="contador-rotulo">juntos desde 01 · 03 · 2026</span>
           <div class="contador-dias"><span id="cont-dias">0</span><small>dias</small></div>
           <div class="contador-relogio">
             <span><b id="cont-horas">00</b>h</span>
