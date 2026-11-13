@@ -262,12 +262,23 @@ async function silenciarMusica() {
   pausarYt();
 }
 
-/* Se o celular não deixar tocar sozinho, o player pisca pedindo um toque. */
+/* Se o celular não deixar tocar sozinho, o player pisca pedindo um toque.
+   (Durante um anúncio do YouTube o player fica "não iniciado" mas o tempo anda:
+   nesse caso não é bloqueio, então só confere de novo daqui a pouco.) */
 let vigiaTimer = null;
-function vigiar() {
+function vigiar(espera = 2500) {
   clearTimeout(vigiaTimer);
   vigiaTimer = setTimeout(() => {
     if (!M.querTocando || !somAtivo || modo !== 'livre' || estaTocando()) return;
+    const t0 = ytPronto ? yt.getCurrentTime() : 0;
+    vigiaTimer = setTimeout(() => {
+      if (!M.querTocando || !somAtivo || modo !== 'livre' || estaTocando()) return;
+      if (ytPronto && yt.getCurrentTime() !== t0) { vigiar(4000); return; }   // anúncio tocando
+      pedirToqueMusica();
+    }, 1200);
+  }, espera);
+}
+function pedirToqueMusica() {
     player.classList.add('precisa-toque');
     atualizarPlayer();
     // qualquer toque na página já resolve
@@ -278,7 +289,6 @@ function vigiar() {
     };
     document.addEventListener('click', tentar, true);
     document.addEventListener('touchend', tentar, true);
-  }, 2500);
 }
 
 /* fade-out suave nos últimos segundos de cada música */
@@ -420,6 +430,7 @@ function continuar() {
   somAtivo = true;
   falhasSeguidas = 0;
   tocarMusica(CONFIG.ordemMusicas[0]);
+  tocarVideos();
   setTimeout(() => window.scrollTo({ top: $('#narrativa').offsetTop, behavior: menosMovimento ? 'auto' : 'smooth' }), 250);
 }
 btnContinuar.addEventListener('click', continuar);
@@ -486,6 +497,7 @@ function entrar() {
   // Este toque é o gesto que libera o som no celular: o áudio fica pronto
   // para começar sozinho quando ela rolar da abertura até a página dele.
   destravarMeuAudio();
+  tocarVideos();
 
   entradaEl.classList.add('saindo');
   setTimeout(() => {
@@ -510,6 +522,7 @@ function iniciarObservadores() {
       const el = e.target;
       if (el.classList.contains('revelar')) el.classList.add('visivel');
       el.querySelectorAll('.revelar').forEach((filho) => filho.classList.add('visivel'));
+      if (el.querySelector('video')) tocarVideos();
       obs.unobserve(el);
     });
   }, { threshold: 0.15, rootMargin: '0px 0px -8% 0px' });
@@ -523,6 +536,22 @@ function iniciarObservadores() {
 
   prepararMidias();
 }
+
+/* Vídeo da cena 6: no iPhone o Safari às vezes não começa vídeo sozinho
+   (Modo de Pouca Energia, vídeo ainda escondido pela animação...). Então ele
+   recebe a ordem de tocar nos toques de "entrar"/"continuar", quando aparece
+   na tela e, por último, em qualquer toque na página. */
+function tocarVideos() {
+  document.querySelectorAll('.midia video').forEach((v) => {
+    if (!v.paused) return;
+    v.muted = true;
+    v.playsInline = true;
+    const p = v.play();
+    if (p && p.catch) p.catch(() => {});
+  });
+}
+document.addEventListener('touchend', tocarVideos, { passive: true });
+document.addEventListener('click', tocarVideos);
 
 /* Se a foto/vídeo não existir, mostra um bloco com o nome do arquivo esperado. */
 function prepararMidias() {
