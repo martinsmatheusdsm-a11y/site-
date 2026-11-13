@@ -1,0 +1,553 @@
+/* =========================================================================
+   style.css — presente de fim de ano
+   Fundo branco, visual limpo. Mobile-first: o bloco @media no fim ajusta
+   o layout para computador. Cores e fontes ficam nas variáveis abaixo.
+   ========================================================================= */
+
+:root {
+  --fundo:        #ffffff;   /* fundo da página */
+  --fundo-suave:  #faf6f1;   /* fundo da carta de agradecimento */
+  --tinta:        #2b2421;   /* texto principal */
+  --tinta-suave:  #8a7d75;   /* legendas, detalhes */
+  --linha:        #ebe4dc;   /* linhas finas e bordas */
+  --acento:       #b5835a;   /* dourado suave (destaques) */
+  --rosa:         #c9877d;   /* rosa suave */
+
+  --titulo: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  --texto:  'Lora', Georgia, 'Times New Roman', serif;
+  --ui:     'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --raio: 20px;
+  --curva: cubic-bezier(.22, .61, .36, 1);    /* movimento suave */
+  --altura-player: 76px;
+}
+
+/* ---------- base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; overflow-x: hidden; }
+
+body {
+  margin: 0;
+  background: var(--fundo);
+  color: var(--tinta);
+  font-family: var(--texto);
+  font-size: 1.0625rem;
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+[hidden] { display: none !important; }
+
+h1, h2 { font-family: var(--titulo); font-weight: 500; line-height: 1.1; margin: 0; }
+p { margin: 0; }
+img, video { display: block; }
+
+/* enquanto a entrada está na tela, nada rola atrás */
+body.na-entrada { overflow: hidden; height: 100%; }
+
+/* scroll travado durante a surpresa (funciona também no iOS) */
+body.travado { position: fixed; left: 0; right: 0; overflow: hidden; }
+
+/* =========================================================================
+   1. ENTRADA
+   ========================================================================= */
+.entrada {
+  position: fixed; inset: 0; z-index: 50;
+  display: grid; place-items: center;
+  padding: 24px;
+  background: var(--fundo);
+  transition: opacity .9s var(--curva), transform .9s var(--curva);
+}
+.entrada.saindo { opacity: 0; transform: translateY(-16px); pointer-events: none; }
+
+.entrada-conteudo {
+  width: 100%; max-width: 340px;
+  text-align: center;
+  animation: surgir 1.4s var(--curva) both;
+}
+@keyframes surgir { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+.entrada-sobre {
+  font-family: var(--ui);
+  font-size: .72rem;
+  letter-spacing: .32em;
+  text-transform: uppercase;
+  color: var(--tinta-suave);
+}
+.entrada-nome {
+  margin-top: 10px;
+  font-size: 4.6rem;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: .01em;
+}
+.entrada-linha {
+  display: block;
+  width: 44px; height: 1px;
+  margin: 22px auto 40px;
+  background: var(--acento);
+}
+
+.btn-entrar {
+  min-width: 150px;
+  padding: 13px 28px;
+  font-family: var(--ui);
+  font-size: .82rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--tinta);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform .2s, background .3s;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-entrar:hover { background: #463c37; }
+.btn-entrar:active { transform: scale(.97); }
+
+
+/* =========================================================================
+   CONTEÚDO
+   ========================================================================= */
+.conteudo {
+  position: relative;
+  overflow-x: hidden; overflow-x: clip;
+  padding-bottom: calc(var(--altura-player) + 28px);   /* espaço para o player */
+}
+
+/* revelação suave ao rolar (o script adiciona .revelar e depois .visivel) */
+.revelar {
+  opacity: 0;
+  transform: translate3d(0, 26px, 0);
+  transition: opacity 1s var(--curva), transform 1s var(--curva);
+}
+.revelar.visivel { opacity: 1; transform: none; }
+
+/* linha "continue descendo" */
+.seta {
+  width: 1px; height: 46px;
+  margin: 46px auto 0;
+  background: linear-gradient(var(--acento), transparent);
+  transform-origin: top;
+  animation: desce 2.2s ease-in-out infinite;
+}
+@keyframes desce { 0% { transform: scaleY(0); opacity: 1; } 60% { transform: scaleY(1); opacity: 1; } 100% { transform: scaleY(1); opacity: 0; } }
+
+/* ---------- fio dourado (liga as fotos enquanto ela rola) ---------- */
+.narrativa { position: relative; }
+.narrativa > section { position: relative; z-index: 1; }
+.fio {
+  position: absolute; left: 0; top: 0;
+  width: 100%; height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 0;
+}
+.fio-base  { fill: none; stroke: #eadfd2; stroke-width: 1; stroke-dasharray: 1 7; stroke-linecap: round; }   /* caminho pontilhado */
+.fio-linha { fill: none; stroke: var(--acento); stroke-width: 1.6; stroke-linecap: round; }                  /* parte já desenhada */
+.fio-ponta { fill: var(--acento); stroke: rgba(181, 131, 90, .22); stroke-width: 7; }                       /* pontinho brilhando na ponta */
+
+/* ---------- 2. introdução ---------- */
+.intro {
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  padding: 14vh 8vw;
+  text-align: center;
+}
+.texto-intro {
+  max-width: 30ch;
+  font-family: var(--titulo);
+  font-size: 1.65rem;
+  font-style: italic;
+  line-height: 1.5;
+  color: var(--tinta);
+}
+
+/* ---------- 3. cenas (foto + texto) ---------- */
+.cena {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 9vh 7vw;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 30px;
+  align-items: center;
+}
+
+.midia {
+  position: relative;
+  margin: 0;
+  width: 88%;
+  aspect-ratio: 4 / 5;
+  max-height: 64svh;
+  border-radius: var(--raio);
+  overflow: hidden;
+  background: var(--fundo-suave);
+  /* revelação tipo "virar a página": a foto abre de um lado para o outro */
+  transition: clip-path 1.3s cubic-bezier(.77, 0, .18, 1);
+}
+.midia img, .midia video {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform 1.8s var(--curva);
+}
+.lado-esq .midia { margin-right: auto; }
+.lado-dir .midia { margin-left: auto; }
+
+.midia.revelar { opacity: 1; transform: none; }   /* a foto usa o recorte, não o fade */
+.lado-esq .midia.revelar { clip-path: inset(0 100% 0 0 round var(--raio)); }
+.lado-dir .midia.revelar { clip-path: inset(0 0 0 100% round var(--raio)); }
+.midia.revelar img, .midia.revelar video { transform: scale(1.1); }
+.midia.revelar.visivel { clip-path: inset(0 0 0 0 round var(--raio)); }
+.midia.revelar.visivel img, .midia.revelar.visivel video { transform: none; }
+
+.texto { max-width: 34em; }
+.texto.revelar { transition-delay: .25s; }
+
+.rotulo {
+  display: flex; align-items: center; gap: 12px;
+  font-family: var(--ui);
+  font-size: .72rem;
+  font-weight: 500;
+  letter-spacing: .28em;
+  font-variant-numeric: lining-nums;
+  color: var(--acento);
+  margin-bottom: 14px;
+}
+.rotulo::after { content: ''; width: 36px; height: 1px; background: var(--acento); opacity: .6; }
+
+.texto h2 {
+  font-size: 2.3rem;
+  font-style: italic;
+  margin-bottom: 16px;
+}
+.texto p {
+  font-size: 1.0625rem;
+  line-height: 1.85;
+  color: #3d3531;
+}
+
+/* bloco mostrado quando o arquivo da foto/vídeo não existe */
+.midia.faltando {
+  display: grid; place-items: center;
+  border: 1px dashed #d8c7b5;
+}
+.placeholder-texto {
+  padding: 18px; text-align: center;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: .78rem; line-height: 1.6;
+  color: var(--tinta-suave);
+  word-break: break-all;
+}
+.placeholder-texto strong { display: block; font-size: 1.4rem; margin-bottom: 6px; }
+
+/* ---------- 4. agradecimento ---------- */
+.agradecimento {
+  margin-top: 8vh;
+  padding: 14vh 7vw 12vh;
+  background: var(--fundo-suave);
+  text-align: center;
+}
+.carta {
+  max-width: 34em;
+  margin: 0 auto;
+  text-align: left;
+}
+.carta p {
+  font-size: 1.0625rem;
+  line-height: 1.95;
+  color: #3d3531;
+}
+.carta p + p { margin-top: 1.1em; }
+.carta .carta-abertura {
+  font-family: var(--titulo);
+  font-size: 2.1rem;
+  font-style: italic;
+  line-height: 1.2;
+  color: var(--tinta);
+  margin-bottom: .2em;
+}
+.carta .carta-fecho {
+  margin-top: 1.8em;
+  text-align: center;
+  font-family: var(--titulo);
+  font-size: 1.9rem;
+  font-style: italic;
+  line-height: 1.3;
+  color: var(--acento);
+}
+
+.chamada-surpresa {
+  max-width: 18ch;
+  margin: 14vh auto 0;
+  font-family: var(--titulo);
+  font-size: 2.2rem;
+  font-style: italic;
+  line-height: 1.3;
+  color: var(--tinta);
+}
+
+/* ---------- 5. surpresa (a seção que dispara) ---------- */
+.surpresa {
+  min-height: 80vh;
+  min-height: 80svh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center;
+}
+.surpresa-marca { font-size: 1.8rem; color: var(--acento); animation: pulsa 2.4s ease-in-out infinite; }
+@keyframes pulsa { 0%, 100% { opacity: .3; transform: scale(.9); } 50% { opacity: 1; transform: scale(1.05); } }
+.surpresa-legenda { margin-top: 12px; font-family: var(--titulo); font-style: italic; font-size: 1.3rem; color: var(--tinta-suave); }
+
+/* tela cheia da surpresa */
+.overlay-surpresa {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 26px;
+  padding: max(56px, env(safe-area-inset-top)) 6vw max(28px, env(safe-area-inset-bottom));
+  background: var(--fundo);
+  touch-action: none;
+  overscroll-behavior: contain;
+  opacity: 0;
+  transition: opacity 1.1s var(--curva);
+}
+.overlay-surpresa.ativa { opacity: 1; }
+
+.slide-quadro {
+  position: relative;
+  width: min(86vw, 460px);
+  aspect-ratio: 4 / 5;
+  max-height: 64svh;
+  border-radius: var(--raio);
+  overflow: hidden;
+  background: var(--fundo-suave);
+  box-shadow: 0 18px 50px rgba(60, 40, 30, .14);
+}
+.slide {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transform: scale(1.04);
+  transition: opacity 1.5s ease, transform 6s linear;
+}
+.slide.ativa { opacity: 1; transform: scale(1); }
+.slide-placeholder {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  padding: 26px; text-align: center;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: .82rem; line-height: 1.7;
+  color: var(--tinta-suave);
+  white-space: pre-line;
+}
+
+/* cartão da sua mensagem (play/pausa + barra de progresso) */
+.mensagem {
+  display: flex; align-items: center; gap: 14px;
+  width: min(86vw, 460px);
+}
+.msg-btn {
+  flex: none;
+  width: 52px; height: 52px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  border: none;
+  color: #fff;
+  background: var(--tinta);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.msg-btn .ic-pause { display: none; }
+.overlay-surpresa.tocando .msg-btn .ic-pause { display: block; }
+.overlay-surpresa.tocando .msg-btn .ic-play { display: none; }
+/* quando o celular não deixa tocar sozinho: o botão pulsa pedindo um toque */
+.overlay-surpresa.precisa-toque .msg-btn { animation: chama 1.6s ease-in-out infinite; background: var(--acento); }
+@keyframes chama { 0%, 100% { box-shadow: 0 0 0 0 rgba(181, 131, 90, .5); } 50% { box-shadow: 0 0 0 14px rgba(181, 131, 90, 0); } }
+
+.msg-info { flex: 1; min-width: 0; }
+.msg-dica { display: block; font-family: var(--titulo); font-style: italic; font-size: 1.1rem; line-height: 1.2; margin-bottom: 8px; color: var(--acento); }
+.progresso { height: 3px; border-radius: 3px; background: var(--linha); overflow: hidden; }
+.progresso-barra { height: 100%; width: 0; background: var(--acento); transition: width .25s linear; }
+.msg-tempo { flex: none; font-family: var(--ui); font-size: .78rem; font-variant-numeric: tabular-nums; color: var(--tinta-suave); }
+
+.btn-pular {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top));
+  right: max(16px, env(safe-area-inset-right));
+  padding: 6px 14px;
+  font-family: var(--ui); font-size: .74rem; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--tinta-suave);
+  background: transparent;
+  border: 1px solid var(--linha);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+/* ---------- 7. encerramento ---------- */
+.final {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex; align-items: center; justify-content: center;
+  padding: 12vh 8vw;
+  text-align: center;
+  overflow: hidden;
+}
+.brilhos { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.final-texto { position: relative; z-index: 1; max-width: 640px; animation: surgir 2.2s var(--curva) both; }
+.final-titulo { font-size: clamp(3.4rem, 15vw, 6rem); font-style: italic; color: var(--acento); margin-bottom: 22px; }
+.final p { font-family: var(--titulo); font-size: 1.6rem; line-height: 1.4; }
+/* contador de dias juntos */
+.contador {
+  max-width: 320px;
+  margin: 46px auto 0;
+  padding: 26px 0 24px;
+  border-top: 1px solid var(--linha);
+  border-bottom: 1px solid var(--linha);
+}
+.contador-rotulo {
+  display: block;
+  font-family: var(--ui); font-size: .66rem; letter-spacing: .28em; text-transform: uppercase;
+  color: var(--tinta-suave);
+}
+.contador-dias {
+  margin-top: 8px;
+  font-family: var(--titulo); font-style: italic; font-weight: 500;
+  font-size: 4.6rem; line-height: 1;
+  color: var(--acento);
+  font-variant-numeric: lining-nums;
+}
+.contador-dias small { margin-left: 10px; font-size: 1.5rem; color: var(--tinta); }
+.contador-relogio {
+  display: flex; justify-content: center; gap: 18px;
+  margin-top: 12px;
+  font-family: var(--ui); font-size: .78rem; color: var(--tinta-suave);
+}
+.contador-relogio b { margin-right: 2px; font-weight: 500; font-size: 1.05rem; color: var(--tinta); font-variant-numeric: tabular-nums; }
+
+/* assinatura escrita à mão: vai aparecendo da esquerda para a direita */
+.final .assinatura {
+  margin-top: 40px;
+  font-family: 'Great Vibes', 'Cormorant Garamond', cursive;
+  font-style: normal;
+  font-size: 2.7rem;
+  line-height: 1.3;
+  color: var(--tinta);
+}
+.assinatura span {
+  display: inline-block;
+  padding: 0 .25em;
+  clip-path: inset(0 100% 0 0);
+  -webkit-clip-path: inset(0 100% 0 0);
+}
+.final.escrevendo .assinatura span { animation: escrever 3.2s cubic-bezier(.45, .05, .35, 1) .4s forwards; }
+@keyframes escrever {
+  to { clip-path: inset(0 0 0 0); -webkit-clip-path: inset(0 0 0 0); }
+}
+
+/* =========================================================================
+   PLAYER DE MÚSICA (YouTube visível)
+   ========================================================================= */
+.player {
+  position: fixed; z-index: 40;
+  left: max(12px, env(safe-area-inset-left));
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  height: var(--altura-player);
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 10px 8px 8px;
+  background: rgba(255, 255, 255, .97);
+  border: 1px solid var(--linha);
+  border-radius: 18px;
+  box-shadow: 0 10px 34px rgba(60, 40, 30, .12);
+  transform: translateY(160%);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform .9s var(--curva), opacity .9s var(--curva);
+}
+.player.mostrar { transform: none; opacity: 1; pointer-events: auto; }
+
+.player-video {
+  position: relative;
+  flex: none;
+  width: 104px; height: 58px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #000;
+}
+.player-video iframe { position: absolute; inset: 0; width: 100% !important; height: 100% !important; border: 0; }
+
+.player-info { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
+.player-rotulo { font-family: var(--ui); font-size: .62rem; letter-spacing: .2em; text-transform: uppercase; color: var(--tinta-suave); }
+.player-titulo { font-family: var(--titulo); font-size: 1.15rem; font-style: italic; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.player-artista { font-family: var(--ui); font-size: .74rem; color: var(--tinta-suave); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.player-btn {
+  flex: none;
+  width: 42px; height: 42px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--linha);
+  color: var(--tinta);
+  background: #fff;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.player-btn .ic-pause { display: none; }
+.player.tocando .player-btn .ic-pause { display: block; }
+.player.tocando .player-btn .ic-play { display: none; }
+
+/* quando o celular não deixa tocar sozinho: o vídeo pisca pedindo um toque */
+.player.precisa-toque .player-video { animation: chama 1.6s ease-in-out infinite; overflow: visible; }
+.player.precisa-toque .player-rotulo { color: var(--acento); }
+
+/* ---------- aviso pequeno ---------- */
+.aviso {
+  position: fixed;
+  left: 50%; top: max(16px, env(safe-area-inset-top));
+  transform: translateX(-50%);
+  z-index: 80;
+  max-width: calc(100vw - 32px);
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: var(--tinta);
+  color: #fff;
+  font-family: var(--ui);
+  font-size: .8rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .15);
+  cursor: pointer;
+}
+
+/* =========================================================================
+   COMPUTADOR (a partir de 820px): foto de um lado, texto do outro
+   ========================================================================= */
+@media (min-width: 820px) {
+  body { font-size: 1.125rem; }
+  .cena { grid-template-columns: 1fr 1fr; gap: 72px; padding: 13vh 7vw; }
+  .midia { width: 100%; max-width: 440px; max-height: 76vh; justify-self: center; }
+  .lado-esq .midia, .lado-dir .midia { margin: 0; }
+  .lado-dir .midia { order: 2; }
+  .texto h2 { font-size: 3rem; }
+  .texto p, .carta p { font-size: 1.125rem; }
+  .texto-intro { font-size: 2.1rem; }
+  .chamada-surpresa { font-size: 2.8rem; }
+  .entrada-nome { font-size: 5.6rem; }
+
+  .player { left: auto; width: 360px; right: 24px; bottom: 24px; }
+  .conteudo { padding-bottom: 40px; }
+}
+
+/* =========================================================================
+   Quem prefere menos movimento recebe tudo sem animação
+   ========================================================================= */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; }
+  .revelar { opacity: 1; transform: none; }
+  .midia.revelar { clip-path: none; }
+  .assinatura span { clip-path: none; -webkit-clip-path: none; }
+}
