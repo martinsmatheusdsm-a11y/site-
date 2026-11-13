@@ -8,17 +8,23 @@
 /* ---------- CONFIGURAÇÃO (ajuste aqui) ---------- */
 const CONFIG = {
   /* MÚSICAS (tocam pelo YouTube, no player do canto da tela)
-     Ordem: Andança começa assim que o texto abre e fica em loop.
-     Depois do seu áudio: Palácios e Castelos -> Não Penso em Mais Nada -> repete.
      Em "youtube" vai o código do vídeo (o que vem depois de "watch?v=" no link).
      Se o 1º código não puder tocar fora do YouTube, o site tenta o próximo. */
   musicas: {
-    andanca:  { titulo: 'Andança',                artista: 'Beth Carvalho', youtube: ['mSF9lxCfCWk', 'XAU4p_a4F1Y', 'COqa2YK95Eo'] },
-    palacios: { titulo: 'Palácios e Castelos',    artista: 'João Gomes',    youtube: ['9pFzVeYrFOM', '3IEeuZ8kJD0', 'zoCOAUpdsIo'] },
-    naoPenso: { titulo: 'Não Penso em Mais Nada', artista: 'Arlindo Cruz',  youtube: ['hPKi47J5UYY', 'BIb2jnpOIeI'] },
+    andanca:  { titulo: 'Andança',                artista: 'Beth Carvalho · ao vivo', youtube: ['Zav50SgbK8o', '4e0JpwNbAvQ', 'JUCJR0v9aFQ'] },
+    palacios: { titulo: 'Palácios e Castelos',    artista: 'João Gomes',              youtube: ['9pFzVeYrFOM', '3IEeuZ8kJD0', 'zoCOAUpdsIo'] },
+    naoPenso: { titulo: 'Não Penso em Mais Nada', artista: 'Arlindo Cruz',            youtube: ['hPKi47J5UYY', 'BIb2jnpOIeI'] },
   },
-  musicaInicial: 'andanca',
-  playlistFinal: ['palacios', 'naoPenso'],
+  // ordem das músicas no quadro e na sequência (Andança é sempre a primeira).
+  // Quando uma acaba, toca a próxima da lista; depois da última, volta para a primeira.
+  ordemMusicas: ['andanca', 'palacios', 'naoPenso'],
+
+  /* ONDE FICA O SEU ÁUDIO
+     'inicio' = logo depois da capa (antes das fotos)
+     'fim'    = depois do "mas calma... tenho mais uma surpresa..."
+     Dá para testar a outra opção sem mexer aqui, só mudando o link:
+     .../?audio=fim  ou  .../?audio=inicio */
+  posicaoAudio: 'inicio',
 
   // sua mensagem gravada (tenta o 1º arquivo; se não existir, o próximo)
   meuAudio: ['assets/audio/meu-audio.mp3', 'assets/audio/meu-audio.ogg'],
@@ -28,22 +34,21 @@ const CONFIG = {
 
   volumeMusica: 60,      // volume das músicas (0 a 100)
   duracaoFade: 1500,     // duração das entradas/saídas de volume, em ms
-  intervaloSlide: 5000,  // tempo de cada foto na surpresa, em ms
   pastaExtras: 'assets/fotos/extras/',
 };
 
-/* ---------- FOTOS DA SURPRESA ----------
-   Liste aqui os arquivos que estão em assets/fotos/extras/ (na ordem em que
-   devem aparecer). O navegador não consegue "ler a pasta" sozinho. */
+/* ---------- FOTOS SEM LEGENDA ----------
+   Uma por página, nesta ordem (a ordem em que você mandou). Os arquivos ficam
+   em assets/fotos/extras/. Para tirar uma foto, apague o nome dela daqui. */
 const FOTOS_EXTRAS = [
-  'extra-01.jpg', 'extra-02.jpg', 'extra-03.jpg', 'extra-04.jpg', 'extra-05.jpg',
-  'extra-06.jpg', 'extra-07.jpg', 'extra-08.jpg', 'extra-09.jpg', 'extra-10.jpg',
-  'extra-11.jpg', 'extra-12.jpg', 'extra-13.jpg', 'extra-14.jpg', 'extra-15.jpg',
-  'extra-16.jpg', 'extra-17.jpg', 'extra-18.jpg', 'extra-19.jpg', 'extra-20.jpg',
-  'extra-21.jpg', 'extra-22.jpg', 'extra-23.jpg', 'extra-24.jpg', 'extra-25.jpg',
-  'extra-26.jpg', 'extra-27.jpg', 'extra-28.jpg', 'extra-29.jpg', 'extra-30.jpg',
-  'extra-31.jpg', 'extra-32.jpg', 'extra-33.jpg', 'extra-34.jpg', 'extra-35.jpg',
-  'extra-36.jpg', 'extra-37.jpg', 'extra-38.jpg', 'extra-39.jpg',
+  'extra-19.jpg', 'extra-16.jpg', 'extra-17.jpg', 'extra-18.jpg', 'extra-21.jpg',
+  'extra-20.jpg', 'extra-22.jpg', 'extra-24.jpg', 'extra-23.jpg', 'extra-27.jpg',
+  'extra-25.jpg', 'extra-26.jpg', 'extra-30.jpg', 'extra-28.jpg', 'extra-29.jpg',
+  'extra-32.jpg', 'extra-31.jpg', 'extra-34.jpg', 'extra-33.jpg', 'extra-36.jpg',
+  'extra-35.jpg', 'extra-38.jpg', 'extra-37.jpg', 'extra-06.jpg', 'extra-39.jpg',
+  'extra-01.jpg', 'extra-05.jpg', 'extra-02.jpg', 'extra-03.jpg', 'extra-04.jpg',
+  'extra-09.jpg', 'extra-07.jpg', 'extra-08.jpg', 'extra-13.jpg', 'extra-10.jpg',
+  'extra-11.jpg', 'extra-12.jpg', 'extra-15.jpg', 'extra-14.jpg',
 ];
 
 /* =========================================================================
@@ -52,11 +57,15 @@ const FOTOS_EXTRAS = [
 
 const $ = (sel) => document.querySelector(sel);
 
+// posição do áudio: o link (?audio=fim / ?audio=inicio) tem prioridade sobre o CONFIG
+const POSICAO_AUDIO = (() => {
+  const p = new URLSearchParams(location.search).get('audio');
+  return p === 'fim' || p === 'inicio' ? p : CONFIG.posicaoAudio;
+})();
+
 const entradaEl   = $('#entrada');
 const btnEntrar   = $('#btn-entrar');
 const conteudo    = $('#conteudo');
-const secSurpresa = $('#surpresa');
-const legendaSurp = $('#surpresa-legenda');
 const secFinal    = $('#final');
 const aviso       = $('#aviso');
 
@@ -65,26 +74,26 @@ const playerBtn     = $('#player-btn');
 const playerRotulo  = $('#player-rotulo');
 const playerTitulo  = $('#player-titulo');
 const playerArtista = $('#player-artista');
+const btnLista      = $('#btn-lista');
+const listaMusicas  = $('#lista-musicas');
+const listaItens    = $('#lista-itens');
 
-const meuAudio    = $('#meu-audio');
-const overlay     = $('#overlay-surpresa');
-const slideA      = overlay.querySelector('.slide-a');
-const slideB      = overlay.querySelector('.slide-b');
-const slidePlaceholder = $('#slide-placeholder');
-const msgBtn      = $('#msg-btn');
-const msgDica     = $('#msg-dica');
-const msgTempo    = $('#msg-tempo');
-const barra       = $('#progresso-barra');
-const btnPular    = $('#btn-pular');
+const meuAudio      = $('#meu-audio');
+const secMensagem   = $('#mensagem');
+const msgBtn        = $('#msg-btn');
+const msgDica       = $('#msg-dica');
+const msgTempo      = $('#msg-tempo');
+const barra         = $('#progresso-barra');
+const btnPular      = $('#btn-pular');
+const btnContinuar  = $('#btn-continuar');
 
 const menosMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ---------- estado ---------- */
-let modo = 'entrada';           // 'entrada' | 'narrativa' | 'surpresa' | 'final'
+let modo = 'entrada';           // 'entrada' | 'mensagem' (áudio tocando, música parada) | 'livre'
 let somAtivo = true;            // a pessoa deixou a música ligada?
 let meuAudioDisponivel = null;  // null = carregando; true/false depois
-let surpresaDisparada = false;
-let surpresaTerminada = false;
+let mensagemFeita = false;      // já passou pela página do áudio?
 
 /* ---------- utilidades ---------- */
 let avisoTimer = null;
@@ -105,15 +114,14 @@ function formatarTempo(s) {
 }
 
 /* =========================================================================
-   MÚSICA — player do YouTube visível no canto
+   MÚSICA — player do YouTube visível no canto + quadro de escolha
    ========================================================================= */
 
 const M = {
-  chave: CONFIG.musicaInicial,  // música atual
-  loop: true,                   // repetir a música atual?
-  idx: 0,                       // qual código da lista "youtube" está em uso
-  querTocando: false,           // o site quer música tocando agora?
-  saindo: false,                // já começou o fade do fim da faixa?
+  chave: CONFIG.ordemMusicas[0],  // música atual
+  idx: 0,                         // qual código da lista "youtube" está em uso
+  querTocando: false,             // o site quer música tocando agora?
+  saindo: false,                  // já começou o fade do fim da faixa?
 };
 
 let yt = null;
@@ -122,7 +130,6 @@ let ytFalhou = false;
 let pedidoPendente = false;  // pediram para tocar antes do player ficar pronto
 let pausaNossa = false;      // a última pausa foi o site que pediu (não a pessoa)
 let falhasSeguidas = 0;
-let indicePlaylist = 0;
 
 const idDe = (chave, idx) => (CONFIG.musicas[chave].youtube || [])[idx];
 
@@ -154,14 +161,14 @@ function carregarYouTube() {
 }
 
 /* Começa a música `chave` do início. */
-function tocarMusica(chave, loop) {
+function tocarMusica(chave) {
   if (M.chave !== chave) M.idx = 0;
   M.chave = chave;
-  M.loop = loop;
   M.querTocando = true;
   M.saindo = false;
   playerTitulo.textContent = CONFIG.musicas[chave].titulo;
   playerArtista.textContent = CONFIG.musicas[chave].artista;
+  atualizarLista();
   tocarAtual();
   vigiar();
 }
@@ -198,7 +205,7 @@ function pausarYt() {
 function aoMudarEstado(e) {
   const S = YT.PlayerState;
   if (e.data === S.PLAYING) {
-    if (modo === 'surpresa' || modo === 'entrada') { pausarYt(); return; }
+    if (modo === 'mensagem' || modo === 'entrada') { pausarYt(); return; }
     // tocando (seja porque o site pediu, seja porque ela tocou no vídeo)
     somAtivo = true;
     M.querTocando = true;
@@ -208,11 +215,10 @@ function aoMudarEstado(e) {
     fadeMusica(CONFIG.volumeMusica);
   } else if (e.data === S.PAUSED) {
     if (pausaNossa) pausaNossa = false;
-    else if (modo === 'narrativa' || modo === 'final') somAtivo = false;  // ela pausou
+    else if (modo === 'livre') somAtivo = false;     // ela pausou
   } else if (e.data === S.ENDED) {
     M.saindo = false;
-    if (M.loop) { yt.seekTo(0, true); yt.playVideo(); }
-    else if (modo === 'final') proximaDaPlaylist();
+    proximaMusica();
   }
   atualizarPlayer();
 }
@@ -228,7 +234,13 @@ function aoErro(e) {
 
 function musicaFalhou() {
   mostrarAviso('não consegui tocar ' + CONFIG.musicas[M.chave].titulo);
-  if (modo === 'final' && ++falhasSeguidas < CONFIG.playlistFinal.length) setTimeout(proximaDaPlaylist, 1500);
+  if (++falhasSeguidas < CONFIG.ordemMusicas.length) setTimeout(proximaMusica, 1500);
+}
+
+/* próxima da lista (depois da última, volta para a primeira) */
+function proximaMusica() {
+  const ordem = CONFIG.ordemMusicas;
+  tocarMusica(ordem[(ordem.indexOf(M.chave) + 1) % ordem.length]);
 }
 
 function atualizarPlayer() {
@@ -263,19 +275,19 @@ async function silenciarMusica() {
   pausarYt();
 }
 
-/* Se o celular não deixar tocar sozinho, o player pisca pedindo um toque no vídeo. */
+/* Se o celular não deixar tocar sozinho, o player pisca pedindo um toque. */
 let vigiaTimer = null;
 function vigiar() {
   clearTimeout(vigiaTimer);
   vigiaTimer = setTimeout(() => {
-    if (!M.querTocando || !somAtivo || modo === 'surpresa' || estaTocando()) return;
+    if (!M.querTocando || !somAtivo || modo !== 'livre' || estaTocando()) return;
     player.classList.add('precisa-toque');
     atualizarPlayer();
-    // no computador e no Android, qualquer toque na página já resolve
+    // qualquer toque na página já resolve
     const tentar = () => {
       document.removeEventListener('click', tentar, true);
       document.removeEventListener('touchend', tentar, true);
-      if (M.querTocando && somAtivo && modo !== 'surpresa' && !estaTocando() && ytPronto) yt.playVideo();
+      if (M.querTocando && somAtivo && modo === 'livre' && !estaTocando() && ytPronto) yt.playVideo();
     };
     document.addEventListener('click', tentar, true);
     document.addEventListener('touchend', tentar, true);
@@ -289,23 +301,12 @@ setInterval(() => {
   if (d > 0 && d - yt.getCurrentTime() <= CONFIG.duracaoFade / 1000) { M.saindo = true; fadeMusica(0); }
 }, 250);
 
-/* Playlist do fim: Palácios e Castelos -> Não Penso em Mais Nada -> repete */
-function iniciarPlaylistFinal() {
-  indicePlaylist = 0;
-  falhasSeguidas = 0;
-  tocarMusica(CONFIG.playlistFinal[0], false);
-}
-function proximaDaPlaylist() {
-  indicePlaylist = (indicePlaylist + 1) % CONFIG.playlistFinal.length;
-  tocarMusica(CONFIG.playlistFinal[indicePlaylist], false);
-}
-
 /* botão de pausa/play do player */
 playerBtn.addEventListener('click', () => {
   if (estaTocando()) {
     somAtivo = false;
     fadeMusica(0, 600).then(() => { if (!somAtivo) pausarYt(); });
-  } else if (modo !== 'surpresa') {
+  } else if (modo === 'livre') {
     somAtivo = true;
     M.querTocando = true;
     if (ytPronto) yt.playVideo(); else tocarAtual();
@@ -313,8 +314,48 @@ playerBtn.addEventListener('click', () => {
   }
 });
 
+/* ---------- quadro para escolher a música ---------- */
+function montarLista() {
+  CONFIG.ordemMusicas.forEach((chave, i) => {
+    const m = CONFIG.musicas[chave];
+    const li = document.createElement('li');
+    li.dataset.chave = chave;
+    li.innerHTML =
+      '<button type="button">' +
+        '<span class="num">' + (i + 1) + '</span>' +
+        '<span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>' +
+        '<span><span class="nome"></span><span class="art"></span></span>' +
+      '</button>';
+    li.querySelector('.nome').textContent = m.titulo;
+    li.querySelector('.art').textContent = m.artista;
+    li.querySelector('button').addEventListener('click', () => escolherMusica(chave));
+    listaItens.appendChild(li);
+  });
+  atualizarLista();
+}
+function atualizarLista() {
+  listaItens.querySelectorAll('li').forEach((li) => li.classList.toggle('atual', li.dataset.chave === M.chave));
+}
+function abrirLista(abrir) {
+  listaMusicas.hidden = !abrir;
+  btnLista.setAttribute('aria-expanded', String(abrir));
+}
+btnLista.addEventListener('click', (e) => { e.stopPropagation(); abrirLista(listaMusicas.hidden); });
+document.addEventListener('click', (e) => { if (!listaMusicas.hidden && !player.contains(e.target)) abrirLista(false); });
+
+/* o toque dela na música também é o gesto que libera o som no iPhone */
+function escolherMusica(chave) {
+  abrirLista(false);
+  if (modo !== 'livre') return;
+  somAtivo = true;
+  if (chave === M.chave && estaTocando()) return;          // já está tocando essa
+  if (chave === M.chave && ytPronto && yt.getCurrentTime() > 1) { M.querTocando = true; yt.playVideo(); vigiar(); return; }
+  falhasSeguidas = 0;
+  tocarMusica(chave);
+}
+
 /* =========================================================================
-   SUA MENSAGEM (áudio gravado)
+   SUA MENSAGEM (página do áudio)
    ========================================================================= */
 function carregarMeuAudio(i = 0) {
   if (i >= CONFIG.meuAudio.length) { meuAudioDisponivel = false; return; }
@@ -324,8 +365,8 @@ function carregarMeuAudio(i = 0) {
   meuAudio.load();
 }
 
-/* No clique de "entrar" o áudio é "destravado" em silêncio (mudo), para o
-   celular deixar ele tocar sozinho depois, na hora da surpresa. */
+/* Com o áudio no fim, ele é "destravado" em silêncio no clique de "entrar",
+   para o iPhone deixar ele tocar sozinho depois. */
 function destravarMeuAudio() {
   meuAudio.muted = true;
   const p = meuAudio.play();
@@ -335,23 +376,75 @@ function destravarMeuAudio() {
 }
 
 function tocarMensagem() {
-  overlay.classList.remove('precisa-toque');
+  secMensagem.classList.remove('precisa-toque');
+  msgDica.hidden = true;
   meuAudio.muted = false;
   const p = meuAudio.play();
   if (p && p.catch) p.catch(() => pedirToqueMensagem());
-  // se em 1,5 s não começou, mostra o botão pulsando
-  setTimeout(() => { if (meuAudio.paused && !surpresaTerminada && meuAudio.currentTime === 0) pedirToqueMensagem(); }, 1500);
+  // se em 1,5 s não começou, o botão pulsa pedindo um toque
+  setTimeout(() => { if (meuAudio.paused && meuAudio.currentTime === 0 && modo === 'mensagem') pedirToqueMensagem(); }, 1500);
 }
 function pedirToqueMensagem() {
-  if (surpresaTerminada) return;
-  overlay.classList.add('precisa-toque');
+  secMensagem.classList.add('precisa-toque');
   msgDica.hidden = false;
 }
 
+/* Abre a página do áudio: música para, a tela fica parada e o áudio toca. */
+let continuarTimer = null;
+function abrirMensagem() {
+  modo = 'mensagem';
+  clearTimeout(vigiaTimer);
+  abrirLista(false);
+  player.classList.remove('mostrar', 'precisa-toque');
+  window.scrollTo(0, secMensagem.offsetTop);
+  travarScroll();
+  if (meuAudioDisponivel === false) {
+    msgDica.textContent = 'falta o arquivo ' + CONFIG.meuAudio[0];
+    msgDica.hidden = false;
+    mostrarContinuar();
+    return;
+  }
+  meuAudio.currentTime = 0;
+  tocarMensagem();                      // no modo "inicio" isto roda dentro do toque em "entrar"
+  if (M.querTocando || estaTocando()) silenciarMusica();
+}
+
+function mostrarContinuar() {
+  barra.style.width = '100%';
+  secMensagem.classList.add('terminou');
+  btnContinuar.hidden = false;
+  clearTimeout(continuarTimer);
+  continuarTimer = setTimeout(continuar, 25000);    // se ninguém tocar, segue sozinho
+}
+
+/* "continuar" (ou "pular"): libera a tela e começa a música certa. */
+function continuar() {
+  if (modo !== 'mensagem') return;
+  clearTimeout(continuarTimer);
+  mensagemFeita = true;
+  modo = 'livre';
+  meuAudio.pause();
+  btnContinuar.hidden = true;
+  secMensagem.classList.add('terminou');
+  liberarScroll();
+  player.classList.add('mostrar');
+
+  // áudio no início: agora começa Andança. Áudio no fim: Palácios e Castelos.
+  somAtivo = true;
+  falhasSeguidas = 0;
+  tocarMusica(POSICAO_AUDIO === 'inicio' ? CONFIG.ordemMusicas[0] : (CONFIG.ordemMusicas[1] || CONFIG.ordemMusicas[0]));
+
+  const proximo = POSICAO_AUDIO === 'inicio' ? $('#narrativa') : $('#fotos-extras');
+  setTimeout(() => window.scrollTo({ top: proximo.offsetTop, behavior: menosMovimento ? 'auto' : 'smooth' }), 250);
+}
+btnContinuar.addEventListener('click', continuar);
+btnPular.addEventListener('click', continuar);
+
 msgBtn.addEventListener('click', () => {
-  if (meuAudioDisponivel === false) { terminarSurpresa(); return; }
+  if (meuAudioDisponivel === false) { continuar(); return; }
   if (meuAudio.paused) {
-    msgDica.hidden = true;
+    if (meuAudio.ended) meuAudio.currentTime = 0;
+    if (modo === 'livre') silenciarMusica();          // ouvir de novo depois: a música dá uma pausa
     tocarMensagem();
   } else {
     meuAudio.pause();
@@ -359,31 +452,35 @@ msgBtn.addEventListener('click', () => {
 });
 
 meuAudio.addEventListener('play', () => {
-  overlay.classList.add('tocando');
-  overlay.classList.remove('precisa-toque');
+  if (meuAudio.muted) return;
+  secMensagem.classList.add('tocando');
+  secMensagem.classList.remove('precisa-toque');
   msgDica.hidden = true;
 });
-meuAudio.addEventListener('pause', () => overlay.classList.remove('tocando'));
+meuAudio.addEventListener('pause', () => secMensagem.classList.remove('tocando'));
 meuAudio.addEventListener('timeupdate', () => {
-  if (!isFinite(meuAudio.duration) || meuAudio.duration === 0) return;
+  if (!isFinite(meuAudio.duration) || meuAudio.duration === 0 || meuAudio.muted) return;
   barra.style.width = (meuAudio.currentTime / meuAudio.duration * 100) + '%';
   msgTempo.textContent = formatarTempo(meuAudio.duration - meuAudio.currentTime);
 });
-meuAudio.addEventListener('ended', () => { if (surpresaDisparada && !meuAudio.muted) mostrarContinuar(); });
+meuAudio.addEventListener('ended', () => {
+  if (meuAudio.muted) return;
+  if (modo === 'mensagem') mostrarContinuar();
+  else if (mensagemFeita && somAtivo) { M.querTocando = true; if (ytPronto) yt.playVideo(); vigiar(); }   // ouviu de novo: música volta
+});
 
-/* Quando a mensagem acaba, aparece "continuar". O toque nele abre o final e
-   começa Palácios e Castelos na hora (o iPhone só troca de música com um toque).
-   Se ninguém tocar em 25 s, o final abre sozinho do mesmo jeito. */
-const btnContinuar = $('#btn-continuar');
-let continuarTimer = null;
-function mostrarContinuar() {
-  if (surpresaTerminada) return;
-  barra.style.width = '100%';
-  overlay.classList.add('terminou');
-  btnContinuar.hidden = false;
-  continuarTimer = setTimeout(terminarSurpresa, 25000);
+/* trava/libera a rolagem (o truque do position:fixed funciona no iOS) */
+let scrollSalvo = 0;
+function travarScroll() {
+  scrollSalvo = window.scrollY;
+  document.body.style.top = -scrollSalvo + 'px';
+  document.body.classList.add('travado');
 }
-btnContinuar.addEventListener('click', terminarSurpresa);
+function liberarScroll() {
+  document.body.classList.remove('travado');
+  document.body.style.top = '';
+  window.scrollTo(0, scrollSalvo);
+}
 
 /* =========================================================================
    ENTRADA
@@ -392,18 +489,25 @@ btnEntrar.addEventListener('click', entrar);
 
 function entrar() {
   if (modo !== 'entrada') return;
-  modo = 'narrativa';
-
-  // Este clique é o gesto que libera o som: a música começa junto com o texto.
-  tocarMusica(CONFIG.musicaInicial, true);
-  destravarMeuAudio();
+  modo = 'livre';
 
   conteudo.hidden = false;
   window.scrollTo(0, 0);
   iniciarObservadores();
   iniciarFio();
+  iniciarBrilhos();
+  iniciarAssinatura();
+
+  // Este toque é o gesto que libera o som no celular.
+  if (POSICAO_AUDIO === 'inicio') {
+    abrirMensagem();                        // seu áudio começa já
+  } else {
+    tocarMusica(CONFIG.ordemMusicas[0]);    // Andança começa junto com o texto
+    destravarMeuAudio();
+    setTimeout(() => player.classList.add('mostrar'), 500);
+  }
+
   entradaEl.classList.add('saindo');
-  setTimeout(() => player.classList.add('mostrar'), 500);
   setTimeout(() => {
     entradaEl.remove();
     document.body.classList.remove('na-entrada');
@@ -411,16 +515,15 @@ function entrar() {
 }
 
 /* =========================================================================
-   NARRATIVA: revelação suave ao rolar (cada coisa aparece uma vez só)
+   ROLAGEM: revelação suave (cada coisa aparece uma vez só)
    ========================================================================= */
 function iniciarObservadores() {
-  // o que tem animação de entrada
-  document.querySelectorAll('.texto-intro, .cena .midia, .cena .texto, .carta, .chamada-surpresa')
+  document.querySelectorAll('.texto-intro, .cena .midia, .cena .texto, .carta, .chamada-surpresa, .foto-extra')
     .forEach((el) => el.classList.add('revelar'));
 
-  // Observa os blocos (e não a foto em si: a foto começa "recortada" e o
-  // navegador acharia que ela está invisível). Quando o bloco entra na tela,
-  // ele e tudo o que tem dentro aparecem.
+  // Observa os blocos (e não a foto da cena em si: ela começa "recortada" e o
+  // navegador acharia que está invisível). Quando o bloco entra na tela, ele e
+  // tudo o que tem dentro aparecem.
   const obs = new IntersectionObserver((entradas) => {
     entradas.forEach((e) => {
       if (!e.isIntersecting) return;
@@ -430,13 +533,15 @@ function iniciarObservadores() {
       obs.unobserve(el);
     });
   }, { threshold: 0.15, rootMargin: '0px 0px -8% 0px' });
-  document.querySelectorAll('.texto-intro, .cena, .carta, .chamada-surpresa').forEach((el) => obs.observe(el));
+  document.querySelectorAll('.texto-intro, .cena, .carta, .chamada-surpresa, .foto-extra').forEach((el) => obs.observe(el));
 
-  // a surpresa dispara quando metade da seção está na tela — uma vez só
-  const obsSurpresa = new IntersectionObserver((entradas, o) => {
-    if (!surpresaDisparada && entradas.some((e) => e.isIntersecting)) { o.disconnect(); iniciarSurpresa(); }
-  }, { threshold: 0.5 });
-  obsSurpresa.observe(secSurpresa);
+  // com o áudio no fim, a página dele dispara quando metade dela aparece — uma vez só
+  if (POSICAO_AUDIO === 'fim') {
+    const obsMsg = new IntersectionObserver((entradas, o) => {
+      if (!mensagemFeita && modo === 'livre' && entradas.some((e) => e.isIntersecting)) { o.disconnect(); abrirMensagem(); }
+    }, { threshold: 0.5 });
+    obsMsg.observe(secMensagem);
+  }
 
   prepararMidias();
 }
@@ -463,103 +568,32 @@ function mostrarPlaceholderMidia(el) {
     '</strong>falta o arquivo<br>' + el.getAttribute('src') + '</div>';
 }
 
-/* =========================================================================
-   SURPRESA: música pausa, sua mensagem toca, fotos passando
-   ========================================================================= */
-let scrollSalvo = 0;
-function travarScroll() {
-  scrollSalvo = window.scrollY;
-  document.body.style.top = -scrollSalvo + 'px';
-  document.body.classList.add('travado');
+/* ---------- fotos sem legenda: uma página para cada foto ---------- */
+function montarFotosExtras() {
+  const sec = $('#fotos-extras');
+  FOTOS_EXTRAS.forEach((nome) => {
+    const fig = document.createElement('figure');
+    fig.className = 'foto-extra';
+    const img = document.createElement('img');
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    img.alt = '';
+    img.addEventListener('error', () => {
+      fig.innerHTML = '<div class="placeholder-texto"><strong>📷</strong>falta o arquivo<br>' + CONFIG.pastaExtras + nome + '</div>';
+    });
+    img.src = CONFIG.pastaExtras + nome;
+    fig.appendChild(img);
+    sec.appendChild(fig);
+  });
 }
-function liberarScroll() {
-  document.body.classList.remove('travado');
-  document.body.style.top = '';
-  window.scrollTo(0, scrollSalvo);
-}
-overlay.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
-overlay.addEventListener('wheel', (e) => e.preventDefault(), { passive: false });
 
-async function iniciarSurpresa() {
-  surpresaDisparada = true;
-  modo = 'surpresa';
-  clearTimeout(vigiaTimer);
-  player.classList.remove('mostrar', 'precisa-toque');
-
-  travarScroll();
-  overlay.hidden = false;
-  requestAnimationFrame(() => overlay.classList.add('ativa'));
-  iniciarSlideshow();
-
-  await silenciarMusica();               // Andança some suave e pausa
-  if (surpresaTerminada) return;
-
-  if (meuAudioDisponivel === false) {
-    slidePlaceholder.textContent = 'falta o arquivo do seu áudio:\n' + CONFIG.meuAudio[0];
-    slidePlaceholder.hidden = false;
-    msgDica.textContent = 'toque no ▶ para continuar';
-    msgDica.hidden = false;
-    return;
+/* coloca a página do áudio no lugar escolhido */
+function posicionarMensagem() {
+  if (POSICAO_AUDIO === 'inicio') {
+    const narrativa = $('#narrativa');
+    narrativa.parentNode.insertBefore(secMensagem, narrativa);
   }
-  meuAudio.currentTime = 0;
-  tocarMensagem();
 }
-
-btnPular.addEventListener('click', terminarSurpresa);
-
-/* Quando a mensagem termina (ou em "pular"). Roda uma vez só. */
-function terminarSurpresa() {
-  if (surpresaTerminada) return;
-  surpresaTerminada = true;
-  clearTimeout(continuarTimer);
-  modo = 'final';
-
-  meuAudio.pause();
-  pararSlideshow();
-  overlay.classList.remove('ativa');
-  setTimeout(() => { overlay.hidden = true; }, menosMovimento ? 0 : 1100);
-
-  liberarScroll();
-  legendaSurp.textContent = '';
-  secFinal.hidden = false;
-  iniciarBrilhos();
-  iniciarAssinatura();
-  setTimeout(() => {
-    window.scrollTo({ top: secFinal.offsetTop, behavior: menosMovimento ? 'auto' : 'smooth' });
-  }, 700);
-
-  player.classList.add('mostrar');
-  iniciarPlaylistFinal();                // Palácios e Castelos -> Não Penso em Mais Nada
-}
-
-/* ---------- slideshow com troca suave ---------- */
-let slideTimer = null;
-let slideIndice = -1;
-let slideVisivel = null;
-
-function iniciarSlideshow() {
-  if (FOTOS_EXTRAS.length === 0) {
-    slidePlaceholder.textContent = 'sem fotos:\ncoloque em ' + CONFIG.pastaExtras + '\ne liste em FOTOS_EXTRAS no script.js';
-    slidePlaceholder.hidden = false;
-    return;
-  }
-  mostrarSlide(0);
-  slideTimer = setInterval(() => mostrarSlide((slideIndice + 1) % FOTOS_EXTRAS.length), CONFIG.intervaloSlide);
-}
-function mostrarSlide(i) {
-  slideIndice = i;
-  const entra = slideVisivel === slideA ? slideB : slideA;
-  const sai = slideVisivel;
-  const url = CONFIG.pastaExtras + FOTOS_EXTRAS[i];
-  entra.onload = () => {
-    entra.classList.add('ativa');
-    if (sai) sai.classList.remove('ativa');
-    slideVisivel = entra;
-  };
-  entra.src = url;
-  new Image().src = CONFIG.pastaExtras + FOTOS_EXTRAS[(i + 1) % FOTOS_EXTRAS.length];   // pré-carrega a próxima
-}
-function pararSlideshow() { clearInterval(slideTimer); slideTimer = null; }
 
 /* =========================================================================
    ENCERRAMENTO: brilhos dourados caindo devagar
@@ -586,10 +620,11 @@ function iniciarBrilhos() {
     fase: Math.random() * Math.PI * 2, cor: cores[Math.floor(Math.random() * cores.length)],
     a: .35 + Math.random() * .5,
   });
-  const pts = Array.from({ length: 60 }, () => novo(false));
+  let pts = [];
 
   function quadro() {
     if (!visivel) return;
+    if (!pts.length) { medir(); pts = Array.from({ length: 60 }, () => novo(false)); }
     ctx.clearRect(0, 0, w, h);
     for (const p of pts) {
       p.y += p.v; p.fase += .02;
@@ -730,6 +765,9 @@ function iniciarAssinatura() {
    início
    ========================================================================= */
 window.scrollTo(0, 0);
+posicionarMensagem();
+montarFotosExtras();
+montarLista();
 iniciarContador();
 carregarMeuAudio();
 carregarYouTube();
